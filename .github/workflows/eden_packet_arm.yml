@@ -1,0 +1,46 @@
+---
+name: EdenPacketARM
+on:  # yamllint disable-line rule:truthy
+  push:
+    branches: [packet-workflow]
+# yamllint disable rule:line-length
+jobs:
+  integration:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        conf: [ "c2.large.arm" ]
+        hv: ["kvm"]
+    steps:
+      - name: setup packages
+        run: |
+          sudo apt update
+          sudo apt install -y golang jq
+      - name: get eden
+        uses: actions/checkout@v2
+      - name: create ubuntu on packet hosting
+        id: create_ubuntu
+        run: |
+          packet_ubuntu_id=$(./shell-scripts/packet/create-ubuntu.sh -c c2.large.arm -l dfw2 -p "$p_project")
+          if [ -z "$packet_ubuntu_id" ] || [ "$packet_ubuntu_id" = "00000000-0000-0000-0000-000000000000" ]; then echo "cannot create packet server"; exit 1; fi
+          echo "::set-output name=packet_ubuntu_id::$packet_ubuntu_id"
+          packet_ubuntu_ip=$(./shell-scripts/packet/wait-eth0.sh $packet_ubuntu_id 100)
+          if [ -z "$packet_ubuntu_ip" ] || [ "$packet_ubuntu_ip" = "0.0.0.0" ]; then echo "cannot get packet ip"; exit 1; fi
+          echo "::set-output name=packet_ubuntu_ip::$packet_ubuntu_ip"
+        env: 
+          p_token: ${{ secrets.PACKET_TOKEN }}
+          p_project: ${{ secrets.PACKET_PROJECT }}
+      - name: Create ssh key
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_PRIVATE_KEY" > ../private.key
+          sudo chmod 600 ../private.key
+          ssh-keyscan -H ${{ steps.create_ubuntu.outputs.packet_ubuntu_ip  }} >> ~/.ssh/known_hosts
+        env:
+          SSH_PRIVATE_KEY: ${{secrets.PACKET_SSH_KEY}}
+          SSH_KEY_PATH: ${{ github.workspace }}/../private.key
+      - name: deploy and setup eden on packet
+        run: |
+          ssh -i $SSH_KEY_PATH ubuntu@${{ steps.create_ubuntu.outputs.packet_ubuntu_ip  }}
+          uname -a
