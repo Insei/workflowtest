@@ -18,7 +18,7 @@ jobs:
           sudo rm -rf /etc/apt/sources.list.d/microsoft-prod.list /etc/apt/sources.list.d/microsoft-prod.list.save
           sudo add-apt-repository ppa:longsleep/golang-backports
           sudo apt install -y golang-1.16 jq expect
-      - name: get eden
+      - name: Get eden
         uses: actions/checkout@v2
       - name: Create ssh key
         run: |
@@ -34,4 +34,4 @@ jobs:
           SSH_KEY_PATH: ${{ github.workspace }}/../private.key
       - name: Get eden on packet
         run: |
-          ssh -i $SSH_KEY_PATH root@147.75.55.170 'uname -a'
+          ssh -i ${{ github.workspace }}/../private.key root@147.75.55.170 'uname -a'
