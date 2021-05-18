@@ -25,7 +25,7 @@ jobs:
           mkdir -p ~/.ssh/
           echo "$SSH_PRIVATE_KEY" > ${{ github.workspace }}/../private.key
           sudo chmod 600 ${{ github.workspace }}/../private.key
-          ssh-agent -s
+          eval `ssh-agent -s`
           ./shell-scripts/packet/ssh-add.sh "$SSH_KEY_PATH" "$SSH_PASSPHRASE"
         env:
           SSH_PRIVATE_KEY: ${{secrets.PACKET_SSH_KEY}}
