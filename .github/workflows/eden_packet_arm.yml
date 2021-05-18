@@ -23,15 +23,15 @@ jobs:
       - name: Create ssh key
         run: |
           mkdir -p ~/.ssh/
-          echo "$SSH_PRIVATE_KEY" > ${{ github.workspace }}/../private.key
-          sudo chmod 600 ${{ github.workspace }}/../private.key
+          echo "$SSH_PRIVATE_KEY" > "$SSH_KEY_PATH"
+          sudo chmod 600 "$SSH_KEY_PATH"
           eval `ssh-agent -s`
           ./shell-scripts/packet/ssh-add.sh "$SSH_KEY_PATH" "$SSH_PASSPHRASE"
           ssh-keyscan -H 147.75.55.170 > ~/.ssh/known_hosts
         env:
           SSH_PRIVATE_KEY: ${{secrets.PACKET_SSH_KEY}}
           SSH_PASSPHRASE: ${{secrets.PACKET_SSH_PASSPHRASE}}
-          SSH_KEY_PATH: ${{ github.workspace }}/../private.key
+          SSH_KEY_PATH: ~/private.key
       - name: Deploy and setup eden on packet
         run: |
-          ssh -i ${{ github.workspace }}/../private.key -o StrictHostKeyChecking=no root@147.75.55.170 'uname -a'
+          ssh -i $SSH_KEY_PATH -o StrictHostKeyChecking=no root@147.75.55.170 'uname -a'
