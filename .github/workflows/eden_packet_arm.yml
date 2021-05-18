@@ -16,8 +16,6 @@ jobs:
       - name: setup packages
         run: |
           sudo rm -rf /etc/apt/sources.list.d/microsoft-prod.list /etc/apt/sources.list.d/microsoft-prod.list.save
-          sudo grep -v '^$\|^#' /etc/apt/sources.list{,.d/*}
-          sudo apt-get clean && sudo apt-get update
           sudo add-apt-repository ppa:longsleep/golang-backports
           sudo apt install -y golang-1.16 jq
       - name: get eden
@@ -25,15 +23,15 @@ jobs:
       - name: create ubuntu on packet hosting
         id: create_ubuntu
         run: |
-          packet_ubuntu_id=$(./shell-scripts/packet/create-ubuntu.sh -c c2.large.arm -l dfw2 -p "$p_project")
+          packet_ubuntu_id=$(./shell-scripts/packet/create-ubuntu.sh -c c2.large.arm -l dfw2 -p "$PACKET_PROJECT")
           if [ -z "$packet_ubuntu_id" ] || [ "$packet_ubuntu_id" = "00000000-0000-0000-0000-000000000000" ]; then echo "cannot create packet server"; exit 1; fi
           echo "::set-output name=packet_ubuntu_id::$packet_ubuntu_id"
           packet_ubuntu_ip=$(./shell-scripts/packet/wait-eth0.sh $packet_ubuntu_id 100)
           if [ -z "$packet_ubuntu_ip" ] || [ "$packet_ubuntu_ip" = "0.0.0.0" ]; then echo "cannot get packet ip"; exit 1; fi
           echo "::set-output name=packet_ubuntu_ip::$packet_ubuntu_ip"
         env: 
-          p_token: ${{ secrets.PACKET_TOKEN }}
-          p_project: ${{ secrets.PACKET_PROJECT }}
+          PACKET_TOKEN: ${{ secrets.PACKET_TOKEN }}
+          PACKET_PROJECT: ${{ secrets.PACKET_PROJECT }}
       - name: Create ssh key
         run: |
           mkdir -p ~/.ssh/
