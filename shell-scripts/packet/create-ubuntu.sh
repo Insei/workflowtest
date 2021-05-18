@@ -67,8 +67,8 @@ function packet-cli() {
 function packet_cli_create_ubuntu() {
   counter_create=${1:-0}
   packet_id=$(packet-cli -j device create -f "$location" \
-        -H eden-gh-actions-"$server_conf" \
-        -o ubuntu_20_04 \
+        -H eden-gh-actions-"$location"-"$server_conf" \
+        -o ubuntu_18_04 \
         -P "$server_conf" --tags="eden,gh,actions" -p "$project" | \
         jq -r '.["id"]?')
   if echo "$packet_id" | grep -q "null" || [ -z "$packet_id" ]; then

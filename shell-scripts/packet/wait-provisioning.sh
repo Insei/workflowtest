@@ -1,7 +1,7 @@
 #!/bin/bash
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 device_id=$1
-timeout=${1:-1 800}
+timeout=${2:-1800}
 
 fail() { echo "ERROR: packet: $@" 1>&2; exit 1; }
 
@@ -24,7 +24,7 @@ function packet_cli_wait_provisioning() {
     time=${1:-0}
     packet_server_info=$(packet-cli -j device get -i $device_id)
     packet_state=$(echo $packet_server_info | jq -r '.state')
-    if echo "$packet_state" | grep -q "null" || [ -z "$packet_ip" ] || echo "$packet_state" | grep -q "provisioning"; then
+    if echo "$packet_state" | grep -q "null" || [ -z "$packet_state" ] || echo "$packet_state" | grep -q "provisioning"; then
         if [ "$time" -gt "$timeout" ]; then
             exit 1
         fi
