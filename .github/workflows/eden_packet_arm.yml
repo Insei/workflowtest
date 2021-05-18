@@ -17,13 +17,13 @@ jobs:
         run: |
           sudo rm -rf /etc/apt/sources.list.d/microsoft-prod.list /etc/apt/sources.list.d/microsoft-prod.list.save
           sudo add-apt-repository ppa:longsleep/golang-backports
-          sudo apt install -y golang-1.16 jq expect
+          sudo apt install -y golang jq expect
       - name: Get eden
         uses: actions/checkout@v2
       - name: Create ubuntu on packet hosting
         id: ubuntu
         run: |
-          packet_ubuntu_id=$(./shell-scripts/packet/create-ubuntu.sh -c c2.large.arm -l dfw2 -p "$PACKET_PROJECT")
+          packet_ubuntu_id=$(./shell-scripts/packet/create-ubuntu.sh -c c1.xlarge.x86 -l ams1 -p "$PACKET_PROJECT")
           echo "Packet server ID: ${packet_ubuntu_id}"
           echo "::set-output name=packet_ubuntu_id::$packet_ubuntu_id"
           packet_ubuntu_ip=$(./shell-scripts/packet/wait-eth0.sh $packet_ubuntu_id 100)
@@ -53,7 +53,7 @@ jobs:
           ssh root@${{steps.ubuntu.outputs.ip}} 'sudo apt-get update && sudo apt-get remove docker docker-engine docker.io containerd runc'
           ssh root@${{steps.ubuntu.outputs.ip}} 'sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release'
           ssh root@${{steps.ubuntu.outputs.ip}} 'curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --no-tty --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg'
-          ssh root@${{steps.ubuntu.outputs.ip}} 'echo "deb [arch=arm64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null'
+          ssh root@${{steps.ubuntu.outputs.ip}} 'echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null'
           ssh root@${{steps.ubuntu.outputs.ip}} 'sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io'
           ssh root@${{steps.ubuntu.outputs.ip}} 'sudo apt-get install -y jq make git expect qemu binfmt-support qemu-user-static qemu-utils qemu-system-x86 qemu-system-aarch64'
           ssh root@${{steps.ubuntu.outputs.ip}} 'sudo add-apt-repository ppa:longsleep/golang-backports && sudo apt install -y golang'
