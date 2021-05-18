@@ -35,8 +35,10 @@ jobs:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
       - name: Get and setup eden on packet
         run: |
-          ssh root@147.75.55.170 'sudo add-apt-repository ppa:longsleep/golang-backports'
-          ssh root@147.75.55.170 'sudo apt install -y golang-1.16 jq expect'
-          echo ${GITHUB_REF#refs/heads/}
+          echo -e "#!/bin/bash\n ssh root@147.75.55.170 $@" > ./ssh.sh && chmod 777 ./ssh.sh
+          echo -e "#!/bin/bash\n ssh root@147.75.55.170 cd eden && $@" > ssh-eden.sh  && chmod 777 ./ssh-eden.sh
+          ./ssh.sh 'sudo add-apt-repository ppa:longsleep/golang-backports'
+          ./ssh.sh 'sudo apt install -y golang-1.16 jq expect git'
+          ./ssh.sh "git clone https://github.com/lf-edge/eden.git -b $GITHUB_SHA"
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
