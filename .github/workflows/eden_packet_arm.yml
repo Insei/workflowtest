@@ -34,4 +34,6 @@ jobs:
           SSH_KEY_PATH: ${{ github.workspace }}/../private.key
       - name: Get eden on packet
         run: |
+          sudo chmod 600 ${{ github.workspace }}/../private.key
+          sudo chown -R $(whoami) ${{ github.workspace }}/../private.key
           ssh -i ${{ github.workspace }}/../private.key root@147.75.55.170 'uname -a'
