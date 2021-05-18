@@ -11,7 +11,11 @@ __EOT__
 `
 
 function packet-cli() {
-    "$HOME"/go/bin/packet-cli $@
+   if [ -e $HOME/go/bin/packet-cli ]; then
+     "$HOME"/go/bin/packet-cli $@
+   else
+      $GOPATH/bin/packet-cli $@
+   fi
 }
 
 function packet_cli_terminate_device() {
