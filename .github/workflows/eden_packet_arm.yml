@@ -20,6 +20,13 @@ jobs:
           sudo apt install -y golang-1.16 jq expect
       - name: Get eden
         uses: actions/checkout@v2
+      - name: create ubuntu on packet hosting
+        id: ubuntu
+        run: |
+          echo "::set-output name=ip::147.75.55.170"
+        env: 
+          PACKET_TOKEN: ${{ secrets.PACKET_TOKEN }}
+          PACKET_PROJECT: ${{ secrets.PACKET_PROJECT }}
       - name: Create ssh key
         run: |
           mkdir -p ~/.ssh/keys/
@@ -27,7 +34,7 @@ jobs:
           sudo chmod 600 "$SSH_KEY_PATH"
           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
           ./shell-scripts/packet/ssh-add.sh "$SSH_KEY_PATH" "$SSH_PASSPHRASE"
-          ssh-keyscan -H 147.75.55.170 > ~/.ssh/known_hosts
+          ssh-keyscan -H ${{steps.ubuntu.outputs.ip}} > ~/.ssh/known_hosts
         env:
           SSH_PRIVATE_KEY: ${{secrets.PACKET_SSH_KEY}}
           SSH_PASSPHRASE: ${{secrets.PACKET_SSH_PASSPHRASE}}
@@ -35,10 +42,20 @@ jobs:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
       - name: Get and setup eden on packet
         run: |
-          ssh root@147.75.55.170 'sudo rm -rf ~/eden'
-          ssh root@147.75.55.170 'sudo add-apt-repository ppa:longsleep/golang-backports && sudo apt install -y golang-1.16 jq expect git'
-          ssh root@147.75.55.170 'git clone https://github.com/lf-edge/eden.git && cd eden && git checkout '"$GITHUB_SHA"' && git reset --hard'
-          ssh root@147.75.55.170 'cd eden && make clean && make build && make build-tests'
-          ssh root@147.75.55.170 'cd eden && ./eden config add --devmodel=general --arch='"$eve_arch"
+          ssh root@${{steps.ubuntu.outputs.ip}} 'sudo rm -rf ~/eden'
+          ssh root@${{steps.ubuntu.outputs.ip}} 'sudo add-apt-repository ppa:longsleep/golang-backports && sudo apt install -y golang-1.16 jq expect git make'
+          ssh root@${{steps.ubuntu.outputs.ip}} 'git clone https://github.com/lf-edge/eden.git && cd eden && git checkout '"$GITHUB_SHA_TMP"' && git reset --hard'
+          ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && make build && make build-tests'
+          ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden config add --devmodel=general --arch=arm64'
+          ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden config set default --key eve.hv --value=kvm'
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          GITHUB_SHA_TMP: 4ea0e8ca49e2ea8c1c467a62b543a78d8b84045c
+      - name: Create EVE on packet
+        run: |
+          echo "Packet EVE ID: $device_id"
+          echo "Packet EVE IP: $device_ip"
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          PACKET_TOKEN: ${{ secrets.PACKET_TOKEN }}
+          PACKET_PROJECT: ${{ secrets.PACKET_PROJECT }}
