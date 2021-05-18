@@ -25,15 +25,19 @@ jobs:
           mkdir -p ~/.ssh/keys/
           echo "$SSH_PRIVATE_KEY" > "$SSH_KEY_PATH"
           sudo chmod 600 "$SSH_KEY_PATH"
-          eval `ssh-agent -s`
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
           ./shell-scripts/packet/ssh-add.sh "$SSH_KEY_PATH" "$SSH_PASSPHRASE"
           ssh-keyscan -H 147.75.55.170 > ~/.ssh/known_hosts
+          ssh root@147.75.55.170 'uname -a'
         env:
           SSH_PRIVATE_KEY: ${{secrets.PACKET_SSH_KEY}}
           SSH_PASSPHRASE: ${{secrets.PACKET_SSH_PASSPHRASE}}
           SSH_KEY_PATH: ${{ github.workspace }}/../private.key
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
       - name: Get eden on packet
         run: |
           sudo chmod 600 ${{ github.workspace }}/../private.key
           sudo chown -R $(whoami) ${{ github.workspace }}/../private.key
           ssh -i ${{ github.workspace }}/../private.key root@147.75.55.170 'uname -a'
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
