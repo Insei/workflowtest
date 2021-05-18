@@ -15,7 +15,8 @@ jobs:
     steps:
       - name: setup packages
         run: |
-          sudo apt install -y golang jq
+          sudo add-apt-repository ppa:longsleep/golang-backports
+          sudo apt install -y golang-1.16 jq
       - name: get eden
         uses: actions/checkout@v2
       - name: create ubuntu on packet hosting
