@@ -15,7 +15,6 @@ jobs:
     steps:
       - name: setup packages
         run: |
-          sudo apt update
           sudo apt install -y golang jq
       - name: get eden
         uses: actions/checkout@v2
