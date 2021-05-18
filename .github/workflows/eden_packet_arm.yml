@@ -27,7 +27,7 @@ jobs:
           sudo chmod 600 ${{ github.workspace }}/../private.key
           eval `ssh-agent -s`
           ./shell-scripts/packet/ssh-add.sh "$SSH_KEY_PATH" "$SSH_PASSPHRASE"
-          ssh-keygen -H 147.75.55.170 >> ~/.ssh/known_hosts
+          ssh-keyscan -H 147.75.55.170 > ~/.ssh/known_hosts
         env:
           SSH_PRIVATE_KEY: ${{secrets.PACKET_SSH_KEY}}
           SSH_PASSPHRASE: ${{secrets.PACKET_SSH_PASSPHRASE}}
