@@ -54,15 +54,18 @@ jobs:
         run: |
           ssh root@${{steps.ubuntu.outputs.ip}} 'sudo rm -rf ~/eden'
           ssh root@${{steps.ubuntu.outputs.ip}} 'git clone https://github.com/lf-edge/eden.git && cd eden && git checkout '"$GITHUB_SHA_TMP"' && git reset --hard'
-          ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && make build && make build-tests'
+          ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && make clean && make build && make build-tests'
           ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden config add --devmodel=general --arch=arm64'
           ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden config set default --key eve.hv --value=kvm'
+          ssh root@${{steps.ubuntu.outputs.ip}} './eden setup -v debug --netboot=true'
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
           GITHUB_SHA_TMP: 4ea0e8ca49e2ea8c1c467a62b543a78d8b84045c
       - name: Create EVE on packet
         run: |
+          device_id=$(ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && PACKET_TOKEN='"$PACKET_TOKEN"' ./shell-scripts/packet/create.sh -c c2.large.arm -l dfw2 -p '"$PACKET_PROJECT")
           echo "Packet EVE ID: $device_id"
+          device_ip=$(ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && PACKET_TOKEN='"$PACKET_TOKEN"' ./shell-scripts/packet/wait-eth0.sh '"$device_id"' 100')
           echo "Packet EVE IP: $device_ip"
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
