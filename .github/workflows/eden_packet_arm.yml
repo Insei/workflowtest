@@ -16,6 +16,7 @@ jobs:
       - name: setup packages
         run: |
           sudo rm -rf /var/lib/apt/lists/*
+          sudo apt-get clean && sudo apt-get update
           sudo add-apt-repository ppa:longsleep/golang-backports
           sudo apt install -y golang-1.16 jq
       - name: get eden
