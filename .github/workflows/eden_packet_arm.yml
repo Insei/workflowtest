@@ -40,10 +40,19 @@ jobs:
           SSH_PASSPHRASE: ${{secrets.PACKET_SSH_PASSPHRASE}}
           SSH_KEY_PATH: ${{ github.workspace }}/../private.key
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-      - name: Get and setup eden on packet
+      - name: Install Dependencies to packet EDEN server
+        run: |
+          ssh root@${{steps.ubuntu.outputs.ip}} 'sudo apt-get remove docker docker-engine docker.io containerd runc && sudo apt-get update'
+          ssh root@${{steps.ubuntu.outputs.ip}} 'sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release'
+          ssh root@${{steps.ubuntu.outputs.ip}} 'curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg'
+          ssh root@${{steps.ubuntu.outputs.ip}} 'echo "deb [arch=arm64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null'
+          ssh root@${{steps.ubuntu.outputs.ip}} 'sudo apt-get update && sudo apt-get install -y docker-ce docker-ce-cli containerd.io'
+          ssh root@${{steps.ubuntu.outputs.ip}} 'sudo apt-get install -y golang jq make git expect qemu binfmt-support qemu-user-static qemu-utils qemu-system-x86 qemu-system-aarch64'
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+      - name: Get and setup EDEN on packet
         run: |
           ssh root@${{steps.ubuntu.outputs.ip}} 'sudo rm -rf ~/eden'
-          ssh root@${{steps.ubuntu.outputs.ip}} 'sudo add-apt-repository ppa:longsleep/golang-backports && sudo apt install -y golang-1.16 jq expect git make'
           ssh root@${{steps.ubuntu.outputs.ip}} 'git clone https://github.com/lf-edge/eden.git && cd eden && git checkout '"$GITHUB_SHA_TMP"' && git reset --hard'
           ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && make build && make build-tests'
           ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden config add --devmodel=general --arch=arm64'
