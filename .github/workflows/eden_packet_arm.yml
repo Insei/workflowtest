@@ -28,8 +28,10 @@ jobs:
           eval `ssh-agent -s`
           ./shell-scripts/packet/ssh-add.sh "$SSH_KEY_PATH" "$SSH_PASSPHRASE"
           ssh-keyscan -H 147.75.55.170 > ~/.ssh/known_hosts
-          ssh -i $SSH_KEY_PATH root@147.75.55.170 'uname -a'
         env:
           SSH_PRIVATE_KEY: ${{secrets.PACKET_SSH_KEY}}
           SSH_PASSPHRASE: ${{secrets.PACKET_SSH_PASSPHRASE}}
           SSH_KEY_PATH: ${{ github.workspace }}/../private.key
+      - name: Get eden on packet
+        run: |
+          ssh -i $SSH_KEY_PATH root@147.75.55.170 'uname -a'
