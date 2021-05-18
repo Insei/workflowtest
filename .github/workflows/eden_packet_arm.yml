@@ -15,7 +15,7 @@ jobs:
     steps:
       - name: setup packages
         run: |
-          sudo rm -rf /var/lib/apt/lists/*
+          sudo rm -rf /etc/apt/sources.list.d/microsoft-prod.list /etc/apt/sources.list.d/microsoft-prod.list.save
           sudo grep -v '^$\|^#' /etc/apt/sources.list{,.d/*}
           sudo apt-get clean && sudo apt-get update
           sudo add-apt-repository ppa:longsleep/golang-backports
