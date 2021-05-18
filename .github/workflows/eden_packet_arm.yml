@@ -29,15 +29,15 @@ jobs:
           packet_ubuntu_ip=$(./shell-scripts/packet/wait-eth0.sh $packet_ubuntu_id 100)
           if [ -z "$packet_ubuntu_ip" ] || [ "$packet_ubuntu_ip" = "0.0.0.0" ]; then echo "cannot get packet ip"; exit 1; fi
           echo "::set-output name=packet_ubuntu_ip::$packet_ubuntu_ip"
+          ./shell-scripts/packet/wait-provisioning.sh $packet_ubuntu_id
         env: 
           PACKET_TOKEN: ${{ secrets.PACKET_TOKEN }}
           PACKET_PROJECT: ${{ secrets.PACKET_PROJECT }}
       - name: Create ssh key
         run: |
           mkdir -p ~/.ssh/
-          echo "$SSH_PRIVATE_KEY" > ../private.key
-          sudo chmod 600 ../private.key
-          ssh-keyscan -H ${{ steps.create_ubuntu.outputs.packet_ubuntu_ip  }} >> ~/.ssh/known_hosts
+          echo "$SSH_PRIVATE_KEY" > ${{ github.workspace }}/../private.key
+          sudo chmod 600 ${{ github.workspace }}/../private.key
         env:
           SSH_PRIVATE_KEY: ${{secrets.PACKET_SSH_KEY}}
           SSH_KEY_PATH: ${{ github.workspace }}/../private.key

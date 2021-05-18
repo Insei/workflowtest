@@ -56,19 +56,6 @@ as server id on create fail.
 __EOT__
 `
 
-function eden_get_ipxe_cfg_url() {
-  if ! [ -f "$EDEN_DIR"/dist/default-images/eve/tftp/ipxe.efi.cfg ]; then
-    exit 1
-  fi
-  set_url_str=$(cat "$EDEN_DIR"/dist/default-images/eve/tftp/ipxe.efi.cfg | grep "set url")
-  # Setup public IP
-  if ! [ -z "$public_ip" ]; then
-    current_ip=$(echo "$set_url_str" | grep -o '[0-9]\+[.][0-9]\+[.][0-9]\+[.][0-9]\+')
-    set_url_str=$(echo ${set_url_str/"$current_ip"/"$public_ip"})
-  fi
-  echo "${set_url_str/"set url "/""}ipxe.efi.cfg"
-}
-
 function packet-cli() {
    if [ -e $HOME/go/bin/packet-cli ]; then
      "$HOME"/go/bin/packet-cli $@
@@ -89,7 +76,7 @@ function packet_cli_create_ubuntu() {
       fail "packet-cli thrown an error while creating"
     fi
     sleep 10
-    packet_cli_create_eve $((counter_create + 1))
+    packet_cli_create_ubuntu $((counter_create + 1))
   else
     echo "$packet_id"
   fi
