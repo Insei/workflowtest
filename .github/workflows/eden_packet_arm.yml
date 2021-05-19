@@ -25,10 +25,10 @@ jobs:
         id: ubuntu
         run: |
           packet_ubuntu_id=$(./shell-scripts/packet/create-ubuntu.sh ${{ matrix.conf_eden_server }} -p "$PACKET_PROJECT")
-          echo "Packet server ID: ${packet_ubuntu_id}"
-          echo "::set-output name=packet_ubuntu_id::$packet_ubuntu_id"
           packet_ubuntu_ip=$(./shell-scripts/packet/wait-eth0.sh $packet_ubuntu_id 100)
+          echo "Packet server ID: ${packet_ubuntu_id}"
           echo "Packet server IP: ${packet_ubuntu_ip}"
+          echo "::set-output name=id::$packet_ubuntu_id"
           echo "::set-output name=ip::$packet_ubuntu_ip"
           echo "Waiting for the deployment to complete"
           ./shell-scripts/packet/wait-provisioning.sh $packet_ubuntu_id
@@ -77,11 +77,13 @@ jobs:
         run: |
           ssh root@${{steps.ubuntu.outputs.ip}} 'git clone https://github.com/Insei/workflowtest.git -b packet-workflow && cp -r workflowtest/shell-scripts/packet eden/shell-scripts/'
           device_id=$(ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && export PACKET_TOKEN='"$PACKET_TOKEN"' && ./shell-scripts/packet/create-eve.sh'" ${{ matrix.conf_eve_server }} -p $PACKET_PROJECT")
-          echo "Packet EVE ID: $device_id"
-          echo "::set-output name=id::$device_id"
           device_ip=$(ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && export PACKET_TOKEN='"$PACKET_TOKEN"' && ./shell-scripts/packet/wait-eth0.sh '"$device_id"' 200')
+          echo "Packet EVE ID: $device_id"
           echo "Packet EVE IP: $device_ip"
+          echo "::set-output name=id::$device_id"
+          echo "Waiting for the deployment to complete"
           ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && export PACKET_TOKEN='"$PACKET_TOKEN"' && ./shell-scripts/packet/wait-provisioning.sh '"$device_id"
+          sleep 100
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
           PACKET_TOKEN: ${{ secrets.PACKET_TOKEN }}
