@@ -75,7 +75,7 @@ jobs:
       - name: Create EVE on packet
         id: eve
         run: |
-          ssh root@147.75.47.162 'git clone https://github.com/Insei/workflowtest.git -b packet-workflow && cp -r workflowtest/shell-scripts/packet eden/shell-scripts/'
+          ssh root@${{steps.ubuntu.outputs.ip}} 'git clone https://github.com/Insei/workflowtest.git -b packet-workflow && cp -r workflowtest/shell-scripts/packet eden/shell-scripts/'
           device_id=$(ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && PACKET_TOKEN='"$PACKET_TOKEN"' ./shell-scripts/packet/create-eve.sh'" ${{ matrix.conf_eve_server }} -p $PACKET_PROJECT")
           echo "Packet EVE ID: $device_id"
           echo "::set-output name=id::$device_id"
@@ -89,6 +89,13 @@ jobs:
       - name: Onboard EVE and run test
         run: |
           ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden eve onboard'
-          ssh root@${{steps.ubuntu.outputs.ip}} 'EDEN_TEST=gcp ./eden test tests/workflow -v debug'
+          ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && EDEN_TEST=gcp ./eden test tests/workflow -v debug'
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+      - name: Terminate packet servers
+        if: ${{ always() }}
+        run: |
+          ./shell-scripts/packet/delete.sh {{steps.ubuntu.outputs.id}}
+          ./shell-scripts/packet/delete.sh {{steps.eve.outputs.id}}
+        env:
+          PACKET_TOKEN: ${{ secrets.PACKET_TOKEN }}
