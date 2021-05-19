@@ -94,6 +94,11 @@ jobs:
           ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && EDEN_TEST=gcp ./eden test tests/workflow -v debug'
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+      - name: Collect logs
+        if: ${{ always() }}
+        run: |
+          ssh root@${{steps.ubuntu.outputs.ip}} './eden log --format json' > trace.log
+          ssh root@${{steps.ubuntu.outputs.ip}} './eden info' > trace.log
       - name: Terminate packet servers
         if: ${{ always() }}
         run: |
@@ -101,3 +106,12 @@ jobs:
           ./shell-scripts/packet/delete.sh ${{steps.eve.outputs.id}}
         env:
           PACKET_TOKEN: ${{ secrets.PACKET_TOKEN }}
+      - name: Store raw test results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: eden-packet-${{ matrix.conf_eden_server }}-${{ matrix.conf_eve_server }}-${{ matrix.hv }}
+          path: |
+            ${{ github.workspace }}/trace.log
+            ${{ github.workspace }}/info.log
+            ${{ github.workspace }}/console.log
