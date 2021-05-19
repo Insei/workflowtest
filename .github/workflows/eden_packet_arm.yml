@@ -76,12 +76,12 @@ jobs:
         id: eve
         run: |
           ssh root@${{steps.ubuntu.outputs.ip}} 'git clone https://github.com/Insei/workflowtest.git -b packet-workflow && cp -r workflowtest/shell-scripts/packet eden/shell-scripts/'
-          device_id=$(ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && PACKET_TOKEN='"$PACKET_TOKEN"' ./shell-scripts/packet/create-eve.sh'" ${{ matrix.conf_eve_server }} -p $PACKET_PROJECT")
+          device_id=$(ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && export PACKET_TOKEN='"$PACKET_TOKEN"' && ./shell-scripts/packet/create-eve.sh'" ${{ matrix.conf_eve_server }} -p $PACKET_PROJECT")
           echo "Packet EVE ID: $device_id"
           echo "::set-output name=id::$device_id"
-          device_ip=$(ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && PACKET_TOKEN='"$PACKET_TOKEN"' ./shell-scripts/packet/wait-eth0.sh '"$device_id"' 200')
+          device_ip=$(ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && export PACKET_TOKEN='"$PACKET_TOKEN"' && ./shell-scripts/packet/wait-eth0.sh '"$device_id"' 200')
           echo "Packet EVE IP: $device_ip"
-          ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./shell-scripts/packet/wait-provisioning.sh '"$device_id"
+          ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && export PACKET_TOKEN='"$PACKET_TOKEN"' && ./shell-scripts/packet/wait-provisioning.sh '"$device_id"
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
           PACKET_TOKEN: ${{ secrets.PACKET_TOKEN }}
@@ -95,7 +95,7 @@ jobs:
       - name: Terminate packet servers
         if: ${{ always() }}
         run: |
-          ./shell-scripts/packet/delete.sh {{steps.ubuntu.outputs.id}}
-          ./shell-scripts/packet/delete.sh {{steps.eve.outputs.id}}
+          ./shell-scripts/packet/delete.sh ${{steps.ubuntu.outputs.id}}
+          ./shell-scripts/packet/delete.sh ${{steps.eve.outputs.id}}
         env:
           PACKET_TOKEN: ${{ secrets.PACKET_TOKEN }}
