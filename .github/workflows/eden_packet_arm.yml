@@ -10,8 +10,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        conf: [ "c2.large.arm" ]
-        hv: ["kvm"]
+        conf_eden_server: [ "-l dfw2 -c c2.large.arm" ]
+        conf_eve_server: [ "-l dfw2 -c c2.large.arm" ]
+        hv: [ "kvm" ]
     steps:
       - name: Setup packages
         run: |
@@ -23,7 +24,7 @@ jobs:
       - name: Create ubuntu on packet hosting
         id: ubuntu
         run: |
-          packet_ubuntu_id=$(./shell-scripts/packet/create-ubuntu.sh -c c2.large.arm -l dfw2 -p "$PACKET_PROJECT")
+          packet_ubuntu_id=$(./shell-scripts/packet/create-ubuntu.sh ${{ matrix.conf_eden_server }} -p "$PACKET_PROJECT")
           echo "Packet server ID: ${packet_ubuntu_id}"
           echo "::set-output name=packet_ubuntu_id::$packet_ubuntu_id"
           packet_ubuntu_ip=$(./shell-scripts/packet/wait-eth0.sh $packet_ubuntu_id 100)
@@ -65,20 +66,29 @@ jobs:
           ssh root@${{steps.ubuntu.outputs.ip}} 'git clone https://github.com/lf-edge/eden.git && cd eden && git fetch origin pull/625/head:arm-fix && git checkout arm-fix && git reset --hard'
           ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && make clean && make build && make build-tests'
           ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden config add --devmodel=general --arch=arm64'
-          ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden config set default --key eve.hv --value=kvm'
+          ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden config set default --key eve.hv --value='"${{ matrix.hv }}"
           ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden setup -v debug --netboot=true'
           ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden start'
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
           GITHUB_SHA_TMP: 4ea0e8ca49e2ea8c1c467a62b543a78d8b84045c
       - name: Create EVE on packet
+        id: eve
         run: |
-          device_id=$(ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && PACKET_TOKEN='"$PACKET_TOKEN"' ./shell-scripts/packet/create-eve.sh -c c2.large.arm -l ams1 -p '"$PACKET_PROJECT")
+          ssh root@147.75.47.162 'git clone https://github.com/Insei/workflowtest.git -b packet-workflow && cp -r workflowtest/shell-scripts/packet eden/shell-scripts/'
+          device_id=$(ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && PACKET_TOKEN='"$PACKET_TOKEN"' ./shell-scripts/packet/create-eve.sh'" ${{ matrix.conf_eve_server }} -p $PACKET_PROJECT")
           echo "Packet EVE ID: $device_id"
-          device_ip=$(ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && PACKET_TOKEN='"$PACKET_TOKEN"' ./shell-scripts/packet/wait-eth0.sh '"$device_id"' 100')
+          echo "::set-output name=id::$device_id"
+          device_ip=$(ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && PACKET_TOKEN='"$PACKET_TOKEN"' ./shell-scripts/packet/wait-eth0.sh '"$device_id"' 200')
           echo "Packet EVE IP: $device_ip"
-          ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden eve onboard'
+          ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./shell-scripts/packet/wait-provisioning.sh '"$device_id"
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
           PACKET_TOKEN: ${{ secrets.PACKET_TOKEN }}
           PACKET_PROJECT: ${{ secrets.PACKET_PROJECT }}
+      - name: Onboard EVE and run test
+        run: |
+          ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden eve onboard'
+          ssh root@${{steps.ubuntu.outputs.ip}} 'EDEN_TEST=gcp ./eden test tests/workflow -v debug'
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock

@@ -80,7 +80,7 @@ function packet-cli() {
 function packet_cli_create_eve() {
   counter_create=${1:-0}
   packet_id=$(packet-cli -j device create -f "$location" \
-        -H eden-eve-test-"$server_conf" \
+        -H eden-eve-test-"$location"-"$server_conf" \
         -i "$ipxe_cfg_url" -o custom_ipxe \
         -P "$server_conf" --tags="eden,eve,auto,test" -p "$project" | \
         jq -r '.["id"]?')
