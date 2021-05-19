@@ -23,7 +23,7 @@ jobs:
       - name: Create ubuntu on packet hosting
         id: ubuntu
         run: |
-          packet_ubuntu_id=$(./shell-scripts/packet/create-ubuntu.sh -c c1.xlarge.x86 -l ams1 -p "$PACKET_PROJECT")
+          packet_ubuntu_id=$(./shell-scripts/packet/create-ubuntu.sh -c c2.large.arm -l ams1 -p "$PACKET_PROJECT")
           echo "Packet server ID: ${packet_ubuntu_id}"
           echo "::set-output name=packet_ubuntu_id::$packet_ubuntu_id"
           packet_ubuntu_ip=$(./shell-scripts/packet/wait-eth0.sh $packet_ubuntu_id 100)
@@ -62,7 +62,7 @@ jobs:
       - name: Get and setup EDEN on packet
         run: |
           ssh root@${{steps.ubuntu.outputs.ip}} 'sudo rm -rf ~/eden'
-          ssh root@${{steps.ubuntu.outputs.ip}} 'git clone https://github.com/lf-edge/eden.git && cd eden && git checkout '"$GITHUB_SHA_TMP"' && git reset --hard'
+          ssh root@${{steps.ubuntu.outputs.ip}} 'git clone https://github.com/lf-edge/eden.git && cd eden && git fetch origin pull/625/head:arm-fix && git checkout arm-fix && git reset --hard'
           ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && make clean && make build && make build-tests'
           ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden config add --devmodel=general --arch=arm64'
           ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden config set default --key eve.hv --value=kvm'
