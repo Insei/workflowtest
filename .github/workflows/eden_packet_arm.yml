@@ -99,6 +99,8 @@ jobs:
         run: |
           ssh root@${{steps.ubuntu.outputs.ip}} './eden log --format json' > trace.log
           ssh root@${{steps.ubuntu.outputs.ip}} './eden info' > trace.log
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
       - name: Terminate packet servers
         if: ${{ always() }}
         run: |
@@ -110,7 +112,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v2
         with:
-          name: eden-packet-${{ matrix.conf_eden_server }}-${{ matrix.conf_eve_server }}-${{ matrix.hv }}
+          name: eden-packet${{ matrix.conf_eden_server }}eve-packet${{ matrix.conf_eve_server }}-${{ matrix.hv }}
           path: |
             ${{ github.workspace }}/trace.log
             ${{ github.workspace }}/info.log
