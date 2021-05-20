@@ -91,7 +91,7 @@ jobs:
       - name: Onboard EVE and run test
         run: |
           ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden eve onboard'
-          ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && EDEN_TEST=gcp ./eden test tests/workflow -v debug'
+          ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && EDEN_TEST=gcp EDEN_TEST_REGISTRY=n ./eden test tests/workflow -v debug'
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
       - name: Collect logs
