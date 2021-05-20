@@ -86,8 +86,8 @@ function packet_cli_create_device() {
   counter_create=${1:-0}
   packet_id=$(packet-cli -j device create -f "$location" \
         -H eden-"$name_suffix"-"$location"-"$server_conf" \
-        -P "$server_conf" -p "$project" | \
-        -o "$os" "$ipxe"
+        -P "$server_conf" -p "$project" \
+        -o "$os" "$ipxe" | \
         jq -r '.["id"]?')
   if echo "$packet_id" | grep -q "null" || [ -z "$packet_id" ]; then
     if [ "$counter_create" -gt "10" ]; then
