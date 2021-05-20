@@ -24,7 +24,7 @@ jobs:
       - name: Create ubuntu on packet hosting
         id: ubuntu
         run: |
-          packet_ubuntu_id=$(./shell-scripts/packet/create-ubuntu.sh ${{ matrix.conf_eden_server }} -p "$PACKET_PROJECT")
+          packet_ubuntu_id=$(./shell-scripts/packet/create.sh ${{ matrix.conf_eden_server }} -ns gh-action -os ubuntu_18_04 -p "$PACKET_PROJECT")
           packet_ubuntu_ip=$(./shell-scripts/packet/wait-eth0.sh $packet_ubuntu_id 100)
           echo "Packet server ID: ${packet_ubuntu_id}"
           echo "Packet server IP: ${packet_ubuntu_ip}"
@@ -76,7 +76,7 @@ jobs:
         id: eve
         run: |
           ssh root@${{steps.ubuntu.outputs.ip}} 'git clone https://github.com/Insei/workflowtest.git -b packet-workflow && cp -r workflowtest/shell-scripts/packet eden/shell-scripts/'
-          device_id=$(ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && export PACKET_TOKEN='"$PACKET_TOKEN"' && ./shell-scripts/packet/create-eve.sh'" ${{ matrix.conf_eve_server }} -p $PACKET_PROJECT")
+          device_id=$(ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && export PACKET_TOKEN='"$PACKET_TOKEN"' && ./shell-scripts/packet/create-eve.sh -np eve-gh-action'" ${{ matrix.conf_eve_server }} -p $PACKET_PROJECT")
           device_ip=$(ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && export PACKET_TOKEN='"$PACKET_TOKEN"' && ./shell-scripts/packet/wait-eth0.sh '"$device_id"' 200')
           echo "Packet EVE ID: $device_id"
           echo "Packet EVE IP: $device_ip"
@@ -97,8 +97,8 @@ jobs:
       - name: Collect logs
         if: ${{ always() }}
         run: |
-          ssh root@${{steps.ubuntu.outputs.ip}} './eden log --format json' > trace.log
-          ssh root@${{steps.ubuntu.outputs.ip}} './eden info' > trace.log
+          ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden log --format json' > trace.log
+          ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden info' > trace.log
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
       - name: Terminate packet servers
