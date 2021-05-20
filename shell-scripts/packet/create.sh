@@ -4,7 +4,7 @@ EDEN_DIR=$SCRIPT_DIR/../../
 
 while true; do
    case "$1" in
-     -l*) #shellcheck disable=SC2039
+      -l*) #shellcheck disable=SC2039
           location="${1/-l/}"
           if [ -z "$location" ]; then
              location="$2"
