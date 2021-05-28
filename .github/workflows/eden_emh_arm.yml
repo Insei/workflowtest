@@ -63,7 +63,7 @@ jobs:
       - name: Get and setup EDEN on ubuntu packet server
         run: |
           ssh root@${{steps.ubuntu.outputs.ip}} 'sudo rm -rf ~/eden'
-          ssh root@${{steps.ubuntu.outputs.ip}} 'git clone https://github.com/lf-edge/eden.git && cd eden && git checkout '"$GITHUB_SHA"
+          ssh root@${{steps.ubuntu.outputs.ip}} 'git clone https://github.com/lf-edge/eden.git && cd eden && git checkout '"$GITHUB_SHA_TMP"
           ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && make clean && make build && make build-tests'
           ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden config add --devmodel=general --arch=arm64'
           ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden config set default --key eve.hv --value='"${{ matrix.hv }}"
@@ -71,6 +71,7 @@ jobs:
           ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && ./eden start'
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          GITHUB_SHA_TMP: 20094c0c55833c9ffd412e9b5db3e0d885726b75
       - name: Create EVE server on packet hosting
         id: eve
         run: |
