@@ -2,7 +2,7 @@
 name: EdenEMH_ARM
 on:  # yamllint disable-line rule:truthy
   push:
-    branches: [master]
+    branches: [packet-workflow-final]
 # yamllint disable rule:line-length
 jobs:
   integration:
