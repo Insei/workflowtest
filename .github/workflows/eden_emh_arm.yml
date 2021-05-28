@@ -75,6 +75,7 @@ jobs:
       - name: Create EVE server on packet hosting
         id: eve
         run: |
+          ssh root@${{steps.ubuntu.outputs.ip}} 'git clone https://github.com/Insei/workflowtest.git -b packet-workflow && cp -r workflowtest/shell-scripts/packet eden/shell-scripts/'
           device_id=$(ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && export PACKET_TOKEN='"$PACKET_TOKEN"' && ./shell-scripts/packet/create-eve.sh'" ${{ matrix.conf_eve_server }} -p $PACKET_PROJECT"' -ns eve-gh-action')
           device_ip=$(ssh root@${{steps.ubuntu.outputs.ip}} 'cd eden && export PACKET_TOKEN='"$PACKET_TOKEN"' && ./shell-scripts/packet/wait-eth0.sh '"$device_id"' 200')
           echo "Packet EVE ID: $device_id"
